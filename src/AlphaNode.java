@@ -4,6 +4,10 @@
 public class AlphaNode extends SemanticNode{
     SemanticNode child;
 
+    public AlphaNode(SemanticNodeFactory factory, String child){
+        this.child = factory.createSemanticNode(child);
+    }
+
     @Override
     public boolean open() {
         return false;
