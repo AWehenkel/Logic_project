@@ -1,18 +1,18 @@
-import java.util.Vector;
-
 public class Main {
 
     public static void main(String[] args) {
-        MastermindSemanticNodeFactory fact = new MastermindSemanticNodeFactory();
-        SemanticNode sem_tab = null;
-        try {
-            sem_tab = fact.createSemanticNode("(!1_1|!1_2)&1_1");
-        } catch (BadSyntaxFormException e) {
-            e.printStackTrace();
-        }
-        if(sem_tab.open())
-            System.out.println("consistent");
 
-        System.out.println(sem_tab.getValidLeaf());
+        int values[] = new int[3];
+
+        for (int i = 0; i < args.length; i++) {
+            try {
+                values[i] = Integer.parseInt(args[i]);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+        MastermindLogicer m = new MastermindLogicer(values[0], values[1], values[2]);
+        m.SemanticNode();
     }
 }
