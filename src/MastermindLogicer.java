@@ -20,14 +20,14 @@ public class MastermindLogicer{
     private BufferedReader br;
 
     //Vector containing pairs where key is the position and value the color at this position
-    private Vector<Pair<Integer,Integer>> rouge;
-    private Vector<Pair<Integer,Integer>> blanc;
-    private Vector<Pair<Integer,Integer>> etoile;
+    private Vector<Pair<Integer,Integer>> red;
+    private Vector<Pair<Integer,Integer>> white;
+    private Vector<Pair<Integer,Integer>> star;
 
     private MastermindSemanticNodeFactory factory;
-    private int P;
-    private int C;
-    private int R;
+    private int pegs;
+    private int color;
+    private int played;
 
     /*
     * In : int C : the number of color
@@ -35,86 +35,89 @@ public class MastermindLogicer{
     *      int R : the number of guess
     */
     public MastermindLogicer(int C, int P, int R){
-        this.P = P;
-        this.C = C;
-        this.R = R;
-        rouge = new Vector<>();
-        blanc = new Vector<>();
-        etoile = new Vector<>();
+        pegs = P;
+        color = C;
+        played = R;
+        red = new Vector<>();
+        white = new Vector<>();
+        star = new Vector<>();
         factory = new MastermindSemanticNodeFactory();
         br = new BufferedReader(new InputStreamReader(System.in));
     }
 
     /*
-    * Create a part of the formula from a peg where the value is R
+    * Create a part of the formula from a peg where the feedback is R
+    * In : Pair<Integer,Integer> myPair a pair indicating the current peg to treat.
     */
-    private String R(Pair<Integer,Integer> myPair){
-        String r = new String();
-        r += myPair.getKey().toString() + "_" + myPair.getValue().toString();
+    private String redPeg(Pair<Integer,Integer> myPair){
+        String red_sub_formula = new String();
+        red_sub_formula += myPair.getKey().toString() + "_" + myPair.getValue().toString();
         //exclude all color different from the one at this position
-        for(int i = 0 ; i < C ; i++){
+        for(int i = 0 ; i < color ; i++){
             if(i+1 != myPair.getValue()){
-                r += "&!" + myPair.getKey().toString() + "_" + Integer.toString(i+1).charAt(0);
+                red_sub_formula += "&!" + myPair.getKey().toString() + "_" + Integer.toString(i+1);
             }
         }
-        return r;
+        return red_sub_formula;
     }
 
     /*
-    * Create a part of the formula from a peg where the value is B
+    * Create a part of the formula from a peg where the feedback is B
+    * In : Pair<Integer,Integer> myPair a pair indicating the current peg to treat.
     */
-    private String B(Pair<Integer,Integer> myPair){
-        String b = new String();
+    private String whitePeg(Pair<Integer,Integer> myPair){
+        String white_sub_formula = new String();
         Vector<Integer> forbiddenPlace = new Vector<>();
         forbiddenPlace.addElement(myPair.getKey());
         //particular case where Only one B and the rest of R
 
-        if(blanc.size() == 1 && rouge.size() == P-1){
-            b += "!" + myPair.getKey().toString() + "_" + myPair.getValue().toString() + "&" + myPair.getKey().toString() + "_" + myPair.getValue().toString();
+        if(white.size() == 1 && red.size() == pegs-1){
+            white_sub_formula += "!" + myPair.getKey().toString() + "_" + myPair.getValue().toString() + "&" + myPair.getKey().toString() + "_" + myPair.getValue().toString();
         }
         else{
-            b += "!" + myPair.getKey().toString() + "_" + myPair.getValue().toString();
-            b += "&(";
+            white_sub_formula += "!" + myPair.getKey().toString() + "_" + myPair.getValue().toString();
+            white_sub_formula += "&(";
             // all the R are forbidden values
-            for (int j=0; j < rouge.size(); j++){
-                forbiddenPlace.addElement(rouge.elementAt(j).getKey());
+            for (int j=0; j < red.size(); j++){
+                forbiddenPlace.addElement(red.elementAt(j).getKey());
             }
-            for (int j=0; j < etoile.size(); j++){
-                if(myPair.getKey().equals(etoile.elementAt(j).getKey()))
-                    forbiddenPlace.addElement(etoile.elementAt(j).getKey());
+            for (int j=0; j < star.size(); j++){
+                if(myPair.getKey().equals(star.elementAt(j).getKey()))
+                    forbiddenPlace.addElement(star.elementAt(j).getKey());
             }
-            for (int j=0; j < P; j++) {
+            for (int j=0; j < pegs; j++) {
                 if (!forbiddenPlace.contains(j))
-                    b += "(" + R(new Pair<>(j, myPair.getValue())) + ")|";
+                    white_sub_formula += "(" + redPeg(new Pair<>(j, myPair.getValue())) + ")|";
             }
-            b = b.substring(0,b.length()-1);
-            b += ")";
+            white_sub_formula = white_sub_formula.substring(0,white_sub_formula.length()-1);
+            white_sub_formula += ")";
         }
-        return b;
+        return white_sub_formula;
     }
 
     /*
-    * Create a part of the formula from a peg where the value is *
+    * Create a part of the formula from a peg where the feedback is *
+    * In : Pair<Integer,Integer> myPair a pair indicating the current peg to treat.
     */
-    private String E(Pair<Integer,Integer> myPair){
-        String e = new String();
-        for (int i=0;i<blanc.size();i++) {
+    private String starPeg(Pair<Integer,Integer> myPair){
+        String star_sub_formula = new String();
+        for (int i=0;i<white.size();i++) {
             //there is an other peg with value B and same color
-            if (blanc.elementAt(i).getValue() == myPair.getValue())
+            if (white.elementAt(i).getValue().equals(myPair.getValue()))
                 return "!" + myPair.getKey().toString() + "_" + myPair.getValue().toString();
         }
         //discard this color on every peg.
-        for (int i=0; i < P ; i++){
+        for (int i=0; i < pegs ; i++){
             if(i != 0)
-                e += "&!" + Integer.toString(i).charAt(0) + "_" + myPair.getValue().toString();
+                star_sub_formula += "&!" + Integer.toString(i).charAt(0) + "_" + myPair.getValue().toString();
             else
-                e += "!" + Integer.toString(i).charAt(0) + "_" + myPair.getValue().toString();
+                star_sub_formula += "!" + Integer.toString(i).charAt(0) + "_" + myPair.getValue().toString();
         }
-        return e;
+        return star_sub_formula;
     }
 
     /*
-    * This function get all the open leaf from the semantic tableau and create a valid solution for the
+    * This function get all the open leaf from the semantic tableau and create a consistent solution for the
     * mastermind out of the open leafs.
     */
     private void guess(){
@@ -140,11 +143,11 @@ public class MastermindLogicer{
             }
         }
         //a proposition
-        int[] proposition = new int[P];
-        for (int i = 0; i < P; i++)
+        int[] proposition = new int[pegs];
+        for (int i = 0; i < pegs; i++)
             proposition[i] = -1;
 
-        for (int i = 0; i < P; i++){
+        for (int i = 0; i < pegs; i++){
             for (int j = 0; j < prop.size(); j++){
                 if(prop.elementAt(j).getKey() == i)
                     //put a good proposition at index i
@@ -152,7 +155,7 @@ public class MastermindLogicer{
             }
             //if some proposition has not been set put a new created one which is not in the wrong proposition
             if(proposition[i] == -1){
-                for (int j=0; j < C; j++){
+                for (int j=0; j < color; j++){
                     colorlist.addElement(j+1);
                 }
                 for(int j =0; j < wrong.size();j++){
@@ -162,38 +165,40 @@ public class MastermindLogicer{
                 proposition[i] = colorlist.elementAt(0);
             }
         }
-        for (int i =0;i < P ; i++) {
+        for (int i =0;i < pegs ; i++) {
             System.out.print(proposition[i]);
         }
         System.out.println();
     }
 
-    //The "main" method of the class, it reads a input stream and say if it is consitant or not, if it is consistant
-    // it suggest a new one.
+    /*
+    * The "main" method of the class, it reads a input stream and say if it is consistent or not, if it is consistent
+    * it suggest a new solution for the mastermind.
+    */
     public void SemanticNode(){
         try {
             String m = new String();
-            for (int j = 0 ; j<R; j++){
+            for (int j = 0 ; j<played; j++){
                 String[] token = br.readLine().split("[ \t]+");
-                etoile.clear();
-                blanc.clear();
-                rouge.clear();
-                for (int i = 0; i < P ; i++) {
-                    if(token[i+P].equals("*"))
-                        etoile.addElement(new Pair<>(i,Integer.parseInt(token[i])));
-                    else if (token[i+P].equals("B"))
-                        blanc.addElement(new Pair<>(i,Integer.parseInt(token[i])));
+                star.clear();
+                red.clear();
+                white.clear();
+                for (int i = 0; i < pegs ; i++) {
+                    if(token[i+pegs].equals("*"))
+                        star.addElement(new Pair<>(i,Integer.parseInt(token[i])));
+                    else if (token[i+pegs].equals("B"))
+                        white.addElement(new Pair<>(i,Integer.parseInt(token[i])));
                     else
-                        rouge.addElement(new Pair<>(i,Integer.parseInt(token[i])));
+                        red.addElement(new Pair<>(i,Integer.parseInt(token[i])));
                 }
-                for (int i = 0; i <rouge.size();i++){
-                    m += R(rouge.elementAt(i)) + "&";
+                for (int i = 0; i <red.size();i++){
+                    m += redPeg(red.elementAt(i)) + "&";
                 }
-                for (int i = 0; i <blanc.size();i++){
-                    m += B(blanc.elementAt(i)) + "&";
+                for (int i = 0; i < white.size();i++){
+                    m += whitePeg(white.elementAt(i)) + "&";
                 }
-                for (int i = 0; i < etoile.size(); i++){
-                    m += E(etoile.elementAt(i)) + "&"   ;
+                for (int i = 0; i < star.size(); i++){
+                    m += starPeg(star.elementAt(i)) + "&"   ;
                 }
             }
             m = m.substring(0,m.length()-1);
@@ -208,4 +213,5 @@ public class MastermindLogicer{
             System.out.println("false");
         }
     }
+
 }
